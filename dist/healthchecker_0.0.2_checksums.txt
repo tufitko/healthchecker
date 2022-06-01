@@ -1,0 +1,2 @@
+935fbc570dbec20e0d8dfe469a8792782075d49dfa6493b05e91dad6f10d0b9d  healthchecker_0.0.2_linux_arm64.tar.gz
+bbd5d0a081885169841ccc55daa082e9e47c2a5d12b3814f41e8c8fdfeaa714b  healthchecker_0.0.2_linux_amd64.tar.gz
