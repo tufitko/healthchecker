@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"os"
 	"os/signal"
+	"regexp"
 	"strings"
 	"syscall"
 )
@@ -16,10 +17,22 @@ import (
 var (
 	availablePath = flag.String("available-path", "/readyz", "Allowed path for requests")
 	addr          = flag.String("serve-addr", ":8080", "Addr to serve requests")
+
+	allowedHosts = flag.String("allowed-hosts", "", "Allowed hosts for requests (regex)")
 )
 
 func main() {
 	flag.Parse()
+
+	isAllowed := allowedHostsNoop
+	if *allowedHosts != "" {
+		var err error
+		isAllowed, err = allowedHostsRegex(*allowedHosts)
+		if err != nil {
+			log.Fatal(err.Error())
+		}
+	}
+
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		u, err := url.Parse(strings.TrimLeft(r.URL.Path, "/"))
 		if err != nil {
@@ -27,7 +40,7 @@ func main() {
 			return
 		}
 
-		if u.Path != *availablePath {
+		if u.Path != *availablePath || !isAllowed(u.Host) {
 			http.Error(w, "404 not found", http.StatusNotFound)
 			return
 		}
@@ -61,4 +74,19 @@ func Wait(signals []os.Signal) os.Signal {
 	sig := make(chan os.Signal, len(signals))
 	signal.Notify(sig, signals...)
 	return <-sig
+}
+
+func allowedHostsNoop(_ string) bool {
+	return true
+}
+
+func allowedHostsRegex(allowedRegex string) (func(string) bool, error) {
+	r, err := regexp.Compile(allowedRegex)
+	if err != nil {
+		return nil, err
+	}
+
+	return func(s string) bool {
+		return r.MatchString(allowedRegex)
+	}, nil
 }
