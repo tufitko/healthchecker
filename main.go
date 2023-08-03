@@ -40,7 +40,7 @@ func main() {
 			return
 		}
 
-		if u.Path != *availablePath || !isAllowed(u.Host) {
+		if u.Path != *availablePath || !isAllowed(u.Hostname()) {
 			http.Error(w, "404 not found", http.StatusNotFound)
 			return
 		}
@@ -87,6 +87,6 @@ func allowedHostsRegex(allowedRegex string) (func(string) bool, error) {
 	}
 
 	return func(s string) bool {
-		return r.MatchString(allowedRegex)
+		return r.MatchString(s)
 	}, nil
 }
